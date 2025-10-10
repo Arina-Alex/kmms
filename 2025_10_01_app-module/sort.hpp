@@ -3,7 +3,7 @@
 
 namespace biv {
 	namespace sort {
-		void bubble_sort(int* const arr, const int size);
+		void bubble_sort(int* arr, int size);
 	}
 }
 

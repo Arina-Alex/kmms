@@ -2,7 +2,7 @@
 #define IO_HPP
 
 namespace biv {
-	void print(const char* const comment, int* arr, const int size);
+	void print(const char* comment, int* arr, int size);
 }
 
 #endif

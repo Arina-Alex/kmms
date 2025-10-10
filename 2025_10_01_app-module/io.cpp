@@ -1,7 +1,12 @@
 #include "io.hpp"
-
 #include <iostream>
 
-void biv::print(const char* const comment, int* arr, const int size) {
-	// TODO
+void biv::print(const char* comment, int* arr, int size) {
+    std::cout << comment << " ";
+    
+    for (int i = 0; i < size; i++) {
+        std::cout << arr[i] << " ";
+        }
+    
+    std::cout << std::endl;
 }
