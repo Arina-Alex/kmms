@@ -1,12 +1,12 @@
 set(SOURCES
 	test_bubble.cpp
 )
-
-add_executable(test_bubble ${SOURCES})
-target_link_libraries(test_bubble
+set(TEST_TARGET test_bubble)
+add_executable( ${TEST_TARGET} ${SOURCES})
+target_link_libraries(${TEST_TARGET}
 	gtest_main
-	bubble_sort_lib
+	${SORT_LIB}
 )
 
-add_test(test_bubble test_bubble.exe)
+add_test(${TEST_TARGET} ${TEST_TARGET})
 

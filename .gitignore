@@ -5,3 +5,4 @@ lib/
 *.ii
 *.s
 *.o
+*.vscode
