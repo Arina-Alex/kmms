@@ -95,7 +95,77 @@ TEST(SuperPuperLongNumberTest, Less) {
 }
 
 
+TEST(SuperPuperLongNumberTest, Addition) {
+    mal::LongNumber num1("123");
+    mal::LongNumber num2("456");
+    mal::LongNumber num3("999");
+    mal::LongNumber num4("1");
+	mal::LongNumber num5("500");
+	mal::LongNumber num6("-300");
+    mal::LongNumber num7("-500");
+
+    mal::LongNumber result1 = "579";
+    EXPECT_TRUE(num1 + num2 == result1) << "Ошибка при сложении без переноса";
+    
+    mal::LongNumber result2 = "1000";
+    EXPECT_TRUE(num3 + num4 == result2) << "Ошибка при сложении с переносом";
+    
+    mal::LongNumber result3 = "200";
+    EXPECT_TRUE(num5 + num6 == result3) << "Ошибка при сложении со вторым отрицательным числом (вычитание)";
+
+    mal::LongNumber result4 = "200";
+    EXPECT_TRUE(num6 + num5 == result4) << "Ошибка при сложении с первым отрицательным числом (вычитание)";
+
+    mal::LongNumber result5 = "-800";
+    EXPECT_TRUE(num6 + num7 == result5) << "Ошибка при сложении двух отрицительных";
+}
+
+TEST(SuperPuperLongNumberTest, Subtration) {
+    mal::LongNumber num1("123");
+    mal::LongNumber num2("456");
+    mal::LongNumber num3("1000");
+    mal::LongNumber num4("1");
+	mal::LongNumber num5("500");
+    mal::LongNumber num6("500");
+	mal::LongNumber num7("-300");
+    mal::LongNumber num8("-500");
+    mal::LongNumber num9("-500");
+
+    mal::LongNumber result1 = "333";
+    EXPECT_TRUE(num2 - num1 == result1) << "Ошибка при вычитании без заимствования";
+    
+    mal::LongNumber result2 = "999";
+    EXPECT_TRUE(num3 - num4 == result2) << "Ошибка при вычитании с заимствованием";
+    
+    mal::LongNumber result3 = "-333";
+    EXPECT_TRUE(num1 - num2 == result3) << "Ошибка при вычитании чисел одинаковой длины с отрицательным результатом";
+
+    mal::LongNumber result4 = "0";
+    EXPECT_TRUE(num5 - num6 == result4) << "Ошибка при вычитании одинаковых положительных чисел";
+
+    mal::LongNumber result5 = "0";
+    EXPECT_TRUE(num8 - num9 == result5) << "Ошибка при вычитании одинаковых отрицательных чисел";
+
+    mal::LongNumber result6 = "800";
+    EXPECT_TRUE(num6 - num7 == result6) << "Ошибка при вычитании со вторым отрицательным числом (сложение)";
+
+    mal::LongNumber result7 = "-800";
+    EXPECT_TRUE(num7 - num6 == result7) << "Ошибка при вычитании со первым отрицательным числом";
+
+    mal::LongNumber result8 = "200";
+    EXPECT_TRUE(num7 - num8 == result8) << "Ошибка при вычитании двух отрицательных a>b";
+    
+    mal::LongNumber result9 = "-200";
+    EXPECT_TRUE(num8 - num7 == result9) << "Ошибка при вычитании двух отрицательных a<b";
+
+    mal::LongNumber result10 = "-999";
+    EXPECT_TRUE(num4 - num3 == result10) << "Ошибка при вычитании чисел разной длины с отрицательным результатом";
+}
+
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
+
+

@@ -27,17 +27,22 @@ namespace mal {
 			bool operator > (const LongNumber& x) const;
 			bool operator < (const LongNumber& x) const;
 			
-			// LongNumber operator + (const LongNumber& x) const;
-			// LongNumber operator - (const LongNumber& x) const;
-			// LongNumber operator * (const LongNumber& x) const;
-			// LongNumber operator / (const LongNumber& x) const;
-			// LongNumber operator % (const LongNumber& x) const;
-			
-			// bool is_negative() const noexcept;
-			
+			LongNumber operator + (const LongNumber& x) const;
+			LongNumber operator - (const LongNumber& x) const;
+			LongNumber operator * (const LongNumber& x) const;
+			LongNumber operator / (const LongNumber& x) const;
+			LongNumber operator % (const LongNumber& x) const;
+
+			LongNumber operator -() const;
+
+			bool is_negative() const noexcept;
+
 			friend std::ostream& operator << (std::ostream &os, const LongNumber& x);
 			
 		private:
 			int get_length(const char* const str) const noexcept;
+			int compare_abs(const LongNumber& x) const;
+			static LongNumber add_abs (const LongNumber& a, const LongNumber& b);
+			static LongNumber sub_abs (const LongNumber& a, const LongNumber& b);
 	};
 }
