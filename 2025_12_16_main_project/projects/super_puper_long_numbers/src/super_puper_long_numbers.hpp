@@ -42,7 +42,12 @@ namespace mal {
 		private:
 			int get_length(const char* const str) const noexcept;
 			int compare_abs(const LongNumber& x) const;
+			void normalize();
+			static LongNumber to_str(int d);
+
 			static LongNumber add_abs (const LongNumber& a, const LongNumber& b);
 			static LongNumber sub_abs (const LongNumber& a, const LongNumber& b);
+			static LongNumber mult_abs (const LongNumber& a, const LongNumber& b);
+			static LongNumber div_abs (const LongNumber& a, const LongNumber& b);
 	};
 }

@@ -62,52 +62,6 @@ LongNumber::LongNumber(const char* const str) {
 		char a = str[str_len - 1 - i]; 
 		numbers[i] = a - '0';	
 	}
-	
-	
-	
-	// int digits_count = get_length(str);  
-    // int total_len = 0;
-    // while (str[total_len] != '\0') {
-	// 	total_len++;
-	// }
-    // if (digits_count == 0) {
-	// 	length = 1;
-	// 	numbers = new int[length];
-	// 	numbers[0] = 0;
-	// 	sign = 0;
-	// 	return;
-	// }
-
-	// int start = 0;
-	// sign = 1;
-
-	// if (str[0] == '-') {
-	// 	sign = -1;
-	// 	start = 1;
-	// } else if (str[0] == '+')
-	// {
-	// 	sign = 1;
-	// 	start = 1;
-	// }
-	
-    // while (start < total_len && str[start] == '0') {
-    //     start++;
-    // }
-
-    // if (start == total_len) {
-    //     length = 1;
-    //     numbers = new int[length];
-    //     numbers[0] = 0;
-    //     sign = 0;
-    //     return;
-    // }
-
-    // length = total_len - start;
-	// numbers = new int[length];
-    // for (int i = 0; i < length; i++) {
-    //     char a = str[total_len - 1 - i]; 
-    //     numbers[i] = a - '0';	
-    // }
 }
 
 LongNumber::LongNumber(const LongNumber& x) {
@@ -272,6 +226,47 @@ LongNumber LongNumber::operator - (const LongNumber& x) const {
 	}
 }
 
+LongNumber LongNumber::operator * (const LongNumber& x) const {
+	if (sign == 0 or x.sign == 0) {
+		return LongNumber("0");
+	}
+
+	LongNumber result = mult_abs(*this, x);
+	result.sign = sign * x.sign;
+
+	// result.normalize();
+	return result;
+}
+
+LongNumber LongNumber::operator / (const LongNumber& x) const {
+	if (x.sign == 0) {
+		throw std::runtime_error("Деление на ноль");
+	}
+
+	if (compare_abs(x) < 0) {
+		return LongNumber ("0");
+	}
+
+	LongNumber result = div_abs(*this, x);
+	result.sign = sign * x.sign;
+
+	result.normalize();
+	return result;
+}
+
+LongNumber LongNumber::operator % (const LongNumber& x) const {
+	if (x.sign == 0) {
+		throw std::runtime_error("Деление на ноль");
+	}
+	
+	LongNumber quot = *this / x;
+	LongNumber sub_res = quot * x;
+	LongNumber result = *this - sub_res;
+
+	result.normalize();
+	return result;
+}
+
 bool LongNumber::is_negative() const noexcept {
     return sign == -1;
 	
@@ -308,6 +303,7 @@ LongNumber LongNumber::add_abs (const LongNumber& a, const LongNumber& b) {
 	} else {
 		result.length = max_len;
 	}
+	result.normalize();
 	return result;
 }
 
@@ -336,25 +332,54 @@ LongNumber LongNumber::sub_abs (const LongNumber& a, const LongNumber& b) {
 		result.numbers[i] = diff;
 	}
 
-	int real_length = a.length;
-		for (int i = a.length - 1; i > 0; i--) {
-			if (result.numbers[i] == 0) {
-				real_length--;
-			} else {
-				break;
-			}
-		}
-		
-    if (real_length != a.length) {
-        LongNumber normalized(real_length, 1);
-        for (int i = 0; i < real_length; i++) {
-            normalized.numbers[i] = result.numbers[i];
-        }
-        return normalized;
-    }
-
+	result.normalize();
 	return result;
+}
 
+LongNumber LongNumber::mult_abs (const LongNumber& a, const LongNumber& b) {
+	LongNumber result(a.length + b.length, 1);
+
+	for (int i = 0; i < a.length; i++) {
+		int carry = 0;
+		for (int j = 0; j < b.length; j++) {
+			int sub_res = a.numbers[i] * b.numbers[j] + result.numbers[i+j] + carry;
+			result.numbers[i + j] = sub_res % 10;
+			carry = sub_res / 10; 
+		}
+
+		if (carry > 0) {
+			result.numbers[i + b.length] += carry;
+		}
+	}
+	
+	result.normalize();
+	return result;
+}
+
+LongNumber LongNumber::div_abs (const LongNumber& a, const LongNumber& b) {    
+    if (b.length == 1 && b.numbers[0] == 1) {
+        return a;
+    }
+    if (a.compare_abs(b) < 0) {
+        return LongNumber("0");
+    }
+    
+    LongNumber result(a.length, 1);
+    LongNumber rem("0");
+    
+    for (int i = a.length - 1; i >= 0; i--) {
+        rem = rem * LongNumber("10") + to_str(a.numbers[i]);
+        
+        int quot = 0;
+        while (rem.compare_abs(b) >= 0) {
+            rem = rem - b;
+            quot++;
+        }
+        result.numbers[i] = quot;
+    }
+    
+    result.normalize();
+    return result;
 }
 
 int LongNumber::compare_abs(const LongNumber& x) const {
@@ -365,6 +390,28 @@ int LongNumber::compare_abs(const LongNumber& x) const {
 		if (numbers[i] < x.numbers[i]) return -1;
 	}
 	return 0;
+}
+
+void LongNumber::normalize() {
+	int real_len = length;
+	
+	for (int i = length - 1; i > 0; i--) {
+		if (numbers[i] == 0) {
+			real_len--;
+		} else {
+			break;
+		}
+	}
+
+	if (real_len != length) {
+		int* new_numbers = new int [real_len];
+		for (int i = 0; i < real_len; i++) {
+			new_numbers[i] = numbers[i];
+		}
+		delete [] numbers;
+		numbers - new_numbers;
+		length = real_len;
+	}
 }
 
 int LongNumber::get_length(const char* const str) const noexcept {
@@ -380,6 +427,12 @@ int LongNumber::get_length(const char* const str) const noexcept {
 		i++;
 	}
 	return len;
+}
+
+LongNumber LongNumber::to_str(int d) {
+    LongNumber result(1, 1); 
+    result.numbers[0] = d;
+    return result;
 }
 
 namespace mal {
