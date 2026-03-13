@@ -254,6 +254,7 @@ TEST(SuperPuperLongNumberTest, Modulo) {
     mal::LongNumber num4("-123");
     mal::LongNumber num5("1000");
     mal::LongNumber num6("0");
+    mal::LongNumber num7("-10");
     
     mal::LongNumber result1 = "3";
     EXPECT_TRUE(num1 % num2 == result1) << "Ошибка при обычном взятии остатка";
@@ -267,29 +268,20 @@ TEST(SuperPuperLongNumberTest, Modulo) {
     EXPECT_TRUE(num1 % num1 == result3) << "Ошибка при взятии остатка числа на само себя";
 
     EXPECT_TRUE(num4 % num4 == result3) << "Ошибка при взятии остатка числа на само себя (отрицательные)";
+
+    mal::LongNumber result4 = "7";
+    EXPECT_TRUE(num4 % num2 == result4) << "Ошибка при взятии остатка c первым отрицательным";    
+ 
+    mal::LongNumber result5 = "3";
+    EXPECT_TRUE(num1 % num7 == result5) << "Ошибка при взятии остатка со вторым отрицательным";
     
-    mal::LongNumber result4 = "1000";
-    EXPECT_TRUE(num1 % num5 == result4) << "Ошибка при взятии остатка, когда делитель больше делимого";
+    mal::LongNumber result6 = "1000";
+    EXPECT_TRUE(num1 % num5 == result6) << "Ошибка при взятии остатка, когда делитель больше делимого";
     
     EXPECT_THROW(num1 % num6, std::runtime_error) << "Должно быть исключение runtime_error при взятии остатка на ноль";
-    
-    // // Остаток с отрицательными числами
-    // mal::LongNumber result8 = "10";  // Зависит от реализации: может быть 10 или -10
-    // EXPECT_TRUE(num12 % num13 == result8 || num12 % num13 == mal::LongNumber("-20")) 
-    //     << "Ошибка при взятии остатка -100 % 30";
-    
-    // mal::LongNumber result9 = "10";
-    // EXPECT_TRUE(num1 % num14 == result9 || num1 % num14 == mal::LongNumber("-20")) 
-    //     << "Ошибка при взятии остатка 100 % -30";
-    
-    // mal::LongNumber result10 = "3";  // Зависит от реализации
-    // EXPECT_TRUE(num3 % num16 == result10 || num3 % num16 == mal::LongNumber("-7")) 
-    //     << "Ошибка при взятии остатка 123 % -10";
-    
-    // mal::LongNumber result11 = "-3";  // Зависит от реализации
-    // EXPECT_TRUE(num15 % num4 == result11 || num15 % num4 == mal::LongNumber("7")) 
-    //     << "Ошибка при взятии остатка -123 % 10";
+
 }
+
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
