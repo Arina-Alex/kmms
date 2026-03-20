@@ -64,6 +64,37 @@ LongNumber::LongNumber(const char* const str) {
 	}
 }
 
+LongNumber::LongNumber(int x) {
+    if (x == 0) {
+        length = 1;
+        sign = 0;
+        numbers = new int[1];
+        numbers[0] = 0;
+        return;
+    }
+    
+    if (x < 0) {
+        sign = -1;
+        x = -x; 
+    } else {
+        sign = 1;
+    }
+    
+    int temp = x;
+    length = 0;
+    while (temp > 0) {
+        length++;
+        temp /= 10;
+    }
+    
+    numbers = new int[length];
+    
+    for (int i = 0; i < length; i++) {
+        numbers[i] = x % 10;
+        x /= 10;
+	}
+}
+
 LongNumber::LongNumber(const LongNumber& x) {
 	length = x.length;
 	sign = x.sign;
@@ -234,37 +265,68 @@ LongNumber LongNumber::operator * (const LongNumber& x) const {
 	LongNumber result = mult_abs(*this, x);
 	result.sign = sign * x.sign;
 
-	// result.normalize();
 	return result;
 }
 
 LongNumber LongNumber::operator / (const LongNumber& x) const {
-	if (x.sign == 0) {
-		throw std::runtime_error("Деление на ноль");
-	}
+    if (x.sign == 0) {
+        throw std::runtime_error("Деление на ноль");
+    }
+    
+    LongNumber a_abs = *this;
+    a_abs.sign = 1;
+    
+    LongNumber b_abs = x;
+    b_abs.sign = 1;
+    
+    if (a_abs.compare_abs(b_abs) < 0) {
+        return LongNumber("0");
+    }
+    
+    LongNumber quot_abs = div_abs(a_abs, b_abs);
+    LongNumber rem_abs = a_abs - quot_abs * b_abs;
+    int result_sign = sign * x.sign;
 
-	if (compare_abs(x) < 0) {
-		return LongNumber ("0");
-	}
+    if (rem_abs != LongNumber("0") && sign < 0) {
+        quot_abs = quot_abs + LongNumber("1");
+    }
+    
+    LongNumber result = quot_abs;
+    result.sign = result_sign;
 
-	LongNumber result = div_abs(*this, x);
-	result.sign = sign * x.sign;
-
-	result.normalize();
-	return result;
+    if (result.length == 1 && result.numbers[0] == 0) {
+        result.sign = 0;
+    }
+    
+    result.normalize();
+    return result;
 }
+
 
 LongNumber LongNumber::operator % (const LongNumber& x) const {
 	if (x.sign == 0) {
 		throw std::runtime_error("Деление на ноль");
-	}
-	
-	LongNumber quot = *this / x;
-	LongNumber sub_res = quot * x;
-	LongNumber result = *this - sub_res;
+	}   
+    LongNumber a_abs = *this;
+    a_abs.sign = 1;
+    
+    LongNumber b_abs = x;
+    b_abs.sign = 1;
+    
+    LongNumber subres = a_abs / b_abs; 
+    LongNumber result = a_abs - subres * b_abs;
 
-	result.normalize();
-	return result;
+    if (result == LongNumber("0")) {
+        return LongNumber("0");
+    }
+    
+    if (sign < 0) {
+        result = b_abs - result;
+    }
+    
+    result.sign = 1;
+    result.normalize();
+    return result;
 }
 
 bool LongNumber::is_negative() const noexcept {
@@ -368,7 +430,7 @@ LongNumber LongNumber::div_abs (const LongNumber& a, const LongNumber& b) {
     LongNumber rem("0");
     
     for (int i = a.length - 1; i >= 0; i--) {
-        rem = rem * LongNumber("10") + to_str(a.numbers[i]);
+        rem = rem * 10 + a.numbers[i];
         
         int quot = 0;
         while (rem.compare_abs(b) >= 0) {
@@ -409,7 +471,7 @@ void LongNumber::normalize() {
 			new_numbers[i] = numbers[i];
 		}
 		delete [] numbers;
-		numbers - new_numbers;
+		numbers = new_numbers;
 		length = real_len;
 	}
 }
@@ -427,12 +489,6 @@ int LongNumber::get_length(const char* const str) const noexcept {
 		i++;
 	}
 	return len;
-}
-
-LongNumber LongNumber::to_str(int d) {
-    LongNumber result(1, 1); 
-    result.numbers[0] = d;
-    return result;
 }
 
 namespace mal {

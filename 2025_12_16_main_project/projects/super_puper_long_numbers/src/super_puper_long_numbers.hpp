@@ -13,6 +13,7 @@ namespace mal {
 			LongNumber();
 			LongNumber(int length, int sign);
 			LongNumber(const char* const str);
+			LongNumber(int x);
 			LongNumber(const LongNumber& x);
 			LongNumber(LongNumber&& x);
 			
@@ -38,7 +39,7 @@ namespace mal {
 			bool is_negative() const noexcept;
 
 			friend std::ostream& operator << (std::ostream &os, const LongNumber& x);
-			
+
 		private:
 			int get_length(const char* const str) const noexcept;
 			int compare_abs(const LongNumber& x) const;
