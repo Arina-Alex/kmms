@@ -10,6 +10,7 @@ add_subdirectory(bubble_sort_mf)
 add_subdirectory(obuchaika)
 add_subdirectory(tests_example)
 add_subdirectory(super_puper_long_numbers)
+add_subdirectory(mega_vector_ultra_list)
 
 set(CMAKE_SUPPRESS_REGENERATION true)
 
