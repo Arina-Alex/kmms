@@ -63,12 +63,22 @@ bool Vector<T>::insert(const std::size_t position, const T& value) {
 		std::size_t new_capacity = capacity * 2;
 		T* new_arr = new T[new_capacity];
 
-		for (std::size_t i = 0; i < size; i++) {
+		for (std::size_t i = 0; i < position; i++) {
 			new_arr[i] = arr[i];
 		}
+
+		new_arr[position] = value;
+
+		for (std::size_t i = position; i < size; i++) {
+			new_arr[i+1] = arr[i];
+		}
+
 		delete[] arr;
 		arr = new_arr;
 		capacity = new_capacity;
+		size++;
+
+		return true;
 	}
 
 	for (std::size_t i = size; i > position; i--) {
@@ -105,6 +115,23 @@ bool Vector<T>::remove_first(const T& value) {
 				arr[j] = arr[j+1];
 			}
 			size--;
+
+			if (size > 0 && size <= capacity/4) {
+				std::size_t new_capacity = capacity / 2;
+
+				if (new_capacity < START_CAPACITY) {
+					new_capacity = START_CAPACITY;
+				}
+
+				T* new_arr = new T[new_capacity];
+				for (std::size_t k = 0; k < size; k++) {
+					new_arr[k] = arr[k];
+				}
+
+				delete[] arr;
+				arr = new_arr;
+				capacity = new_capacity;
+			}
 			return true;
 		}
 	}

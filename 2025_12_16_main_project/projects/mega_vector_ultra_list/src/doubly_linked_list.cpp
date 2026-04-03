@@ -13,6 +13,9 @@ DoublyLinkedList<T>::~DoublyLinkedList() {
 		delete current;
 		current = next;
 	}
+
+	begin = nullptr;
+	end = nullptr;
 }
 
 template<typename T>
