@@ -19,6 +19,7 @@ char map[mapHeight][mapWidth + 1];
 TObject mario;
 TObject *brick = NULL;
 int brick_length;
+int level = 1;
 
 void clear_map () {
     for (int i = 0; i < mapWidth; i++) {
@@ -51,6 +52,7 @@ void init_object(TObject *obj, float xPos, float yPos, float oWidth, float oHeig
 }
 
 bool is_collision(TObject o1, TObject o2);
+void create_level(int lvl);
 
 void vert_move_object(TObject *obj) {
     (*obj).is_fly = true;
@@ -62,6 +64,14 @@ void vert_move_object(TObject *obj) {
         (*obj).y -= (*obj).vert_speed;
         (*obj).vert_speed = 0;
         (*obj).is_fly = false;
+
+        if (brick[i].c_type == '+') {
+            level++;
+            if (level > 2) level = 1;
+            create_level(level);
+            Sleep(1000);
+        }
+
         break;
         }
     }
@@ -113,20 +123,34 @@ bool is_collision(TObject o1, TObject o2) {
         ((o1.y + o1.height) > o2.y ) && (o1.y < (o2.y + o2.height));
 }
 
-void create_level() {
+void create_level(int lvl) {
     init_object(&mario, 39, 10, 3, 3, '@');
 
-    brick_length = 5;
-    brick = (TObject*)realloc(brick, sizeof(*brick) * brick_length);
-    init_object(brick+0, 20, 20, 40, 5, '#');
-    init_object(brick+1, 60, 15, 10, 10, '#');
-    init_object(brick+2, 80, 20, 20, 5, '#');
-    init_object(brick+3, 120, 15, 10, 10, '#');
-    init_object(brick+4, 150, 20, 40, 5, '#');
+    if (lvl == 1) {
+        brick_length = 6;
+        brick = (TObject*)realloc(brick, sizeof(*brick) * brick_length);
+        init_object(brick+0, 20, 20, 40, 5, '#');
+        init_object(brick+1, 60, 15, 10, 10, '#');
+        init_object(brick+2, 80, 20, 20, 5, '#');
+        init_object(brick+3, 120, 15, 10, 10, '#');
+        init_object(brick+4, 150, 20, 40, 5, '#');
+        init_object(brick+5, 210, 15, 10, 10, '+');
+    }
+
+    if (lvl == 2) {
+        brick_length = 4;
+        brick = (TObject*)realloc(brick, sizeof(*brick) * brick_length);
+        init_object(brick+0, 20, 20, 40, 5, '#');
+        init_object(brick+1, 80, 20, 15, 10, '#');
+        init_object(brick+2, 120, 15, 15, 10, '#');
+        init_object(brick+3, 160, 10, 15, 15, '+');
+    }
+    
 }
 
 int main() {
-    create_level();
+    create_level(level);
+    system("color 3D");
 
     do {
         clear_map();
@@ -135,7 +159,7 @@ int main() {
         if (GetKeyState('A') < 0) horizon_move_map(2);
         if (GetKeyState('D') < 0) horizon_move_map(-2);
 
-        if (mario.y > mapHeight) create_level();
+        if (mario.y > mapHeight) create_level(level);
 
         vert_move_object(&mario);
         for (int i = 0; i < brick_length; i++) {
@@ -147,7 +171,7 @@ int main() {
         setCur(0, 0);
         show_map();
 
-        Sleep(10);
+        // Sleep(10);
     }
 
     while (GetKeyState(VK_ESCAPE) >= 0);
