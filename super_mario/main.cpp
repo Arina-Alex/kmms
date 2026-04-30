@@ -25,6 +25,8 @@ TObject *moving = NULL;
 int moving_length;
 
 int level = 1;
+int score;
+int max_lvl;
 
 void clear_map () {
     for (int i = 0; i < mapWidth; i++) {
@@ -59,6 +61,8 @@ void init_object(TObject *obj, float xPos, float yPos, float oWidth, float oHeig
 
 bool is_collision(TObject o1, TObject o2);
 void create_level(int lvl);
+TObject *get_new_moving();
+void player_dead();
 
 void vert_move_object(TObject *obj) {
     (*obj).is_fly = true;
@@ -67,21 +71,30 @@ void vert_move_object(TObject *obj) {
     
     for (int i = 0; i < brick_length; i ++) {
         if (is_collision (*obj, brick[i])) {
-        (*obj).y -= (*obj).vert_speed;
-        (*obj).vert_speed = 0;
-        (*obj).is_fly = false;
+            if (obj[0].vert_speed > 0) {
+                (*obj).is_fly = false;
+            }
 
-        if (brick[i].c_type == '+') {
-            level++;
-            if (level > 2) level = 1;
-            create_level(level);
-            Sleep(1000);
-        }
+            if ((brick[i].c_type == '?') && (obj[0].vert_speed < 0) && (obj == &mario) ) {
+                brick[i].c_type = '-';
+                init_object(get_new_moving(), brick[i].x, brick[i].y-3, 3, 2, '$');
+                moving[moving_length-1].vert_speed = -0.5;
+            }
 
-        break;
+            (*obj).y -= (*obj).vert_speed;
+            (*obj).vert_speed = 0;
+        
+            if (brick[i].c_type == '+') {
+                level++;
+                if (level > max_lvl) level = 1;
+                system("color 2F");
+                Sleep(500);
+                create_level(level);
+                
+            }
+            break;
         }
     }
-
 }
 
 void delete_moving(int i) {
@@ -93,13 +106,22 @@ void delete_moving(int i) {
 void mario_collision() {
     for (int i = 0; i < moving_length; i++) {
         if (is_collision(mario, moving[i])) {
-            if (mario.is_fly && (mario.vert_speed > 0) 
-                && (mario.y + mario.height < moving[i].y + moving[i].height * 0.5)) {
+            if (moving[i].c_type == 'o') {
+                if (mario.is_fly && (mario.vert_speed > 0) 
+                    && (mario.y + mario.height < moving[i].y + moving[i].height * 0.5)) {
+                    score += 50;
+                    delete_moving(i);
+                    i--;
+                    continue;
+                } else {
+                    player_dead();
+                }
+            }
+            if (moving[i].c_type == '$') {
+                score += 100;
                 delete_moving(i);
                 i--;
                 continue;
-            } else {
-                create_level(level);
             }
         }
     }
@@ -115,13 +137,15 @@ void horizon_move_object(TObject *obj) {
             return;
         }
     }
-
-    TObject tmp = *obj;
-    vert_move_object(&tmp);
-    if (tmp.is_fly == true) {
-        obj[0].x -= obj[0].horiz_speed;
-        obj[0].horiz_speed = -obj[0].horiz_speed;
+    if (obj[0].c_type == 'o') {
+        TObject tmp = *obj;
+        vert_move_object(&tmp);
+        if (tmp.is_fly == true) {
+            obj[0].x -= obj[0].horiz_speed;
+            obj[0].horiz_speed = -obj[0].horiz_speed;
+        }
     }
+
 }
 
 
@@ -169,6 +193,12 @@ void horizon_move_map(float dx) {
     }
 }
 
+void player_dead() {
+    system("color 4F");
+    Sleep(500);
+    create_level(level);
+}
+
 bool is_collision(TObject o1, TObject o2) {
     return ((o1.x + o1.width) > o2.x ) && (o1.x < (o2.x + o2.width)) &&
         ((o1.y + o1.height) > o2.y ) && (o1.y < (o2.y + o2.height));
@@ -186,11 +216,48 @@ TObject *get_new_moving() {
     return moving + moving_length - 1;
 }
 
+void put_score_on_map() {
+    char c[30];
+    sprintf(c, "Score %d", score);
+    int len = strlen(c);
+    for (int i = 0; i < len;i++) {
+        map[1][i+5] = c[i];
+    }
+}
+
 void create_level(int lvl) {
+    system("color 3D");
+
+    brick_length = 0;
+    brick = (TObject*)realloc(brick, 0);
+    moving_length = 0;
+    moving = (TObject*)realloc(moving, 0);
+
+
     init_object(&mario, 39, 10, 3, 3, '@');
+    score = 0;
 
     if (lvl == 1) {
-        brick_length = 0;
+        brick = (TObject*)realloc(brick, sizeof(*brick) * brick_length);
+        init_object(get_new_brick(), 20, 20, 40, 5, '#');
+            init_object(get_new_brick(), 30, 10, 5, 3, '?');
+            init_object(get_new_brick(), 50, 10, 5, 3, '?');
+        init_object(get_new_brick(), 60, 15, 40, 10, '#');
+            init_object(get_new_brick(), 60, 5, 10, 3, '-');
+            init_object(get_new_brick(), 70, 5, 5, 3, '?');
+            init_object(get_new_brick(), 75, 5, 5, 3, '-');
+            init_object(get_new_brick(), 80, 5, 5, 3, '?');
+            init_object(get_new_brick(), 85, 5, 10, 3, '-');
+        init_object(get_new_brick(), 100, 20, 20, 5, '#');
+        init_object(get_new_brick(), 120, 15, 10, 10, '#');
+        init_object(get_new_brick(), 150, 20, 40, 5, '#');
+        init_object(get_new_brick(), 210, 15, 10, 10, '+');
+    
+        init_object(get_new_moving(), 25, 10, 3, 2, 'o');
+        init_object(get_new_moving(), 80, 10, 3, 2, 'o');
+    }
+
+    if (lvl == 2) {
         brick = (TObject*)realloc(brick, sizeof(*brick) * brick_length);
         init_object(get_new_brick(), 20, 20, 40, 5, '#');
         init_object(get_new_brick(), 60, 15, 10, 10, '#');
@@ -198,7 +265,7 @@ void create_level(int lvl) {
         init_object(get_new_brick(), 120, 15, 10, 10, '#');
         init_object(get_new_brick(), 150, 20, 40, 5, '#');
         init_object(get_new_brick(), 210, 15, 10, 10, '+');
-        moving_length = 0;
+
         moving = (TObject*)realloc(moving, sizeof(*moving) * moving_length);
         init_object(get_new_moving(), 25, 10, 3, 2, 'o');
         init_object(get_new_moving(), 80, 10, 3, 2, 'o');
@@ -208,14 +275,13 @@ void create_level(int lvl) {
         init_object(get_new_moving(), 175, 10, 3, 2, 'o');
     }
 
-    if (lvl == 2) {
-        brick_length = 0;
+    if (lvl == 3) {
         brick = (TObject*)realloc(brick, sizeof(*brick) * brick_length);
         init_object(get_new_brick(), 20, 20, 40, 5, '#');
         init_object(get_new_brick(), 80, 20, 15, 10, '#');
         init_object(get_new_brick(), 120, 15, 15, 10, '#');
         init_object(get_new_brick(), 160, 10, 15, 15, '+');
-        moving_length = 0;
+
         moving = (TObject*)realloc(moving, sizeof(*moving) * moving_length);
         init_object(get_new_moving(), 25, 10, 3, 2, 'o');
         init_object(get_new_moving(), 50, 10, 3, 2, 'o');
@@ -224,12 +290,12 @@ void create_level(int lvl) {
         init_object(get_new_moving(), 120, 10, 3, 2, 'o');
         init_object(get_new_moving(), 130, 10, 3, 2, 'o');    
     }
+    max_lvl = 3;
     
 }
 
 int main() {
     create_level(level);
-    system("color 3D");
 
     do {
         clear_map();
@@ -238,7 +304,7 @@ int main() {
         if (GetKeyState('A') < 0) horizon_move_map(2);
         if (GetKeyState('D') < 0) horizon_move_map(-2);
 
-        if (mario.y > mapHeight) create_level(level);
+        if (mario.y > mapHeight) player_dead();
 
         vert_move_object(&mario);
         mario_collision();
@@ -259,6 +325,7 @@ int main() {
         }
         
         put_object_on_map(mario);
+        put_score_on_map();
 
         setCur(0, 0);
         show_map();
