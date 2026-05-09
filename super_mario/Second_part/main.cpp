@@ -92,15 +92,37 @@ Object* get_new_brick(Object*& brick, int& brick_length) {
     return &brick[brick_length - 1];
 }
 
-Object* moving = nullptr; 
-int moving_length;
+Object* get_new_moving(Object*& moving, int& moving_length) {
+    Object* new_moving = new Object[moving_length + 1];
+    for (int i = 0; i < moving_length; i++) {
+        new_moving[i] = moving[i];
+    }
+    delete[] moving;
+    moving = new_moving;
+    moving_length++;
+    return &moving[moving_length - 1];
+}
+
+void delete_moving(int i, Object*& moving, int& moving_length) {
+    moving_length--;
+    moving[i] = moving[moving_length];
+
+    Object* new_moving = new Object[moving_length];
+    for (int j = 0; j < moving_length; j++) {
+        new_moving[j] = moving[j];
+    }
+    delete[] moving; 
+    moving = new_moving;
+}
 
 
-void create_level(Object& mario, int& max_lvl, int& level, int& score, Object*& brick, int& brick_length);
-Object* get_new_moving();
-void player_dead(Object& mario, int& max_lvl, int& level, int& score, Object*& brick, int& brick_length);
+void create_level(Object& mario, int& max_lvl, int& level, int& score, 
+    Object*& brick, int& brick_length, Object*& moving, int& moving_length);
+void player_dead(Object& mario, int& max_lvl, int& level, int& score, 
+    Object*& brick, int& brick_length, Object*& moving, int& moving_length);
 
-void vert_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int& score, Object*& brick, int& brick_length) {
+void vert_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int& score, 
+    Object*& brick, int& brick_length, Object*& moving, int& moving_length) {
     obj->is_fly = true;
     obj->vert_speed += 0.25;
     set_object_pos(obj, obj->x, obj->y + obj->vert_speed);
@@ -113,7 +135,7 @@ void vert_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int&
 
             if ((brick[i].c_type == '?') && (obj->vert_speed < 0) && (obj == &mario) ) {
                 brick[i].c_type = '-';
-                init_object(get_new_moving(), brick[i].x, brick[i].y-3, 3, 2, '$');
+                init_object(get_new_moving(moving, moving_length), brick[i].x, brick[i].y-3, 3, 2, '$');
                 moving[moving_length-1].vert_speed = -0.3;
             }
 
@@ -125,7 +147,7 @@ void vert_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int&
                 if (level > max_lvl) level = 1;
                 system("color 2F");
                 Sleep(500);
-                create_level(mario, max_lvl, level, score, brick, brick_length);
+                create_level(mario, max_lvl, level, score, brick, brick_length, moving, moving_length);
                 
             }
             break;
@@ -133,35 +155,26 @@ void vert_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int&
     }
 }
 
-void delete_moving(int i) {
-    moving_length--;
-    moving[i] = moving[moving_length];
 
-    Object* new_moving = new Object[moving_length];
-    for (int j = 0; j < moving_length; j++) {
-        new_moving[j] = moving[j];
-    }
-    delete[] moving; 
-    moving = new_moving;
-}
 
-void mario_collision(Object& mario, int& max_lvl, int& level, int& score, Object*& brick, int& brick_length) {
+void mario_collision(Object& mario, int& max_lvl, int& level, int& score, 
+    Object*& brick, int& brick_length, Object*& moving, int& moving_length) {
     for (int i = 0; i < moving_length; i++) {
         if (is_collision(mario, moving[i])) {
             if (moving[i].c_type == 'o') {
                 if (mario.is_fly && (mario.vert_speed > 0) 
                     && (mario.y + mario.height < moving[i].y + moving[i].height * 0.5)) {
                     score += 50;
-                    delete_moving(i);
+                    delete_moving(i, moving, moving_length);
                     i--;
                     continue;
                 } else {
-                    player_dead(mario, max_lvl, level, score, brick, brick_length);
+                    player_dead(mario, max_lvl, level, score, brick, brick_length, moving, moving_length);
                 }
             }
             if (moving[i].c_type == '$') {
                 score += 100;
-                delete_moving(i);
+                delete_moving(i, moving, moving_length);
                 i--;
                 continue;
             }
@@ -169,7 +182,8 @@ void mario_collision(Object& mario, int& max_lvl, int& level, int& score, Object
     }
 }
 
-void horizon_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int& score, Object*& brick, int& brick_length) {
+void horizon_move_object(Object* obj, Object& mario, int& level, int& max_lvl, int& score, 
+                    Object*& brick, int& brick_length, Object*& moving, int& moving_length) {
     obj->x += obj->horiz_speed;
 
     for (int i = 0; i < brick_length; i++) {
@@ -181,15 +195,13 @@ void horizon_move_object(Object* obj, Object& mario, int& level, int& max_lvl, i
     }
     if (obj->c_type == 'o') {
         Object tmp = *obj;
-        vert_move_object(&tmp, mario, level, max_lvl, score, brick, brick_length);
+        vert_move_object(&tmp, mario, level, max_lvl, score, brick, brick_length, moving, moving_length);
         if (tmp.is_fly == true) {
             obj->x -= obj->horiz_speed;
             obj->horiz_speed = -obj->horiz_speed;
         }
     }
-
 }
-
 
 void setCur(int x, int y) {
     COORD coord;
@@ -198,7 +210,8 @@ void setCur(int x, int y) {
     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
-void horizon_move_map(float dx, Object& mario, Object*& brick, int& brick_length) {
+void horizon_move_map(float dx, Object& mario, Object*& brick, int& brick_length, 
+                    Object*& moving, int& moving_length) {
     mario.x -= dx;
     for (int i = 0; i < brick_length; i++) {
         if (is_collision (mario, brick[i])) {
@@ -217,25 +230,18 @@ void horizon_move_map(float dx, Object& mario, Object*& brick, int& brick_length
     }
 }
 
-void player_dead(Object& mario, int& max_lvl, int& level, int& score, Object*& brick, int& brick_length) {
+void player_dead(Object& mario, int& max_lvl, int& level, int& score, 
+    Object*& brick, int& brick_length, Object*& moving, int& moving_length) {
     system("color 4F");
     Sleep(500);
-    create_level(mario, max_lvl, level, score, brick, brick_length);
-}
-
-Object* get_new_moving() {
-    Object* new_moving = new Object[moving_length + 1];
-    for (int i = 0; i < moving_length; i++) {
-        new_moving[i] = moving[i];
-    }
-    delete[] moving;
-    moving = new_moving;
-    moving_length++;
-    return &moving[moving_length - 1];
+    create_level(mario, max_lvl, level, score, brick, brick_length, moving, moving_length);
 }
 
 
-void create_level(Object& mario, int& max_lvl, int& level, int& score, Object*& brick, int& brick_length) {
+
+
+void create_level(Object& mario, int& max_lvl, int& level, int& score, 
+    Object*& brick, int& brick_length, Object*& moving, int& moving_length) {
     system("color 3D");
 
     delete[] brick;
@@ -264,8 +270,8 @@ void create_level(Object& mario, int& max_lvl, int& level, int& score, Object*& 
         init_object(get_new_brick(brick, brick_length), 150, 20, 40, 5, '#');
         init_object(get_new_brick(brick, brick_length), 210, 15, 10, 10, '+');
     
-        init_object(get_new_moving(), 25, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 80, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 25, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 80, 10, 3, 2, 'o');
     }
 
     if (level == 2) {
@@ -276,12 +282,12 @@ void create_level(Object& mario, int& max_lvl, int& level, int& score, Object*& 
         init_object(get_new_brick(brick, brick_length), 150, 20, 40, 5, '#');
         init_object(get_new_brick(brick, brick_length), 210, 15, 10, 10, '+');
 
-        init_object(get_new_moving(), 25, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 80, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 65, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 120, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 160, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 175, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 25, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 80, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 65, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 120, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 160, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 175, 10, 3, 2, 'o');
     }
 
     if (level == 3) {
@@ -290,12 +296,12 @@ void create_level(Object& mario, int& max_lvl, int& level, int& score, Object*& 
         init_object(get_new_brick(brick, brick_length), 120, 15, 15, 10, '#');
         init_object(get_new_brick(brick, brick_length), 160, 10, 15, 15, '+');
 
-        init_object(get_new_moving(), 25, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 50, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 80, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 90, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 120, 10, 3, 2, 'o');
-        init_object(get_new_moving(), 130, 10, 3, 2, 'o');    
+        init_object(get_new_moving(moving, moving_length), 25, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 50, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 80, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 90, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 120, 10, 3, 2, 'o');
+        init_object(get_new_moving(moving, moving_length), 130, 10, 3, 2, 'o');    
     }
     max_lvl = 3;
     
@@ -306,33 +312,35 @@ int main() {
     Object mario;
     Object* brick = nullptr;
     int brick_length = 0;
+    Object* moving = nullptr; 
+    int moving_length = 0;
     int level = 1;
     int max_lvl = 3;
     int score = 0;
 
-    create_level(mario, max_lvl, level, score, brick, brick_length);
+    create_level(mario, max_lvl, level, score, brick, brick_length, moving, moving_length);
 
     do {
         clear_map(map);
 
         if ((mario.is_fly == false) && (GetKeyState(VK_SPACE) < 0)) mario.vert_speed = -2;
-        if (GetKeyState('A') < 0) horizon_move_map(2, mario, brick, brick_length);
-        if (GetKeyState('D') < 0) horizon_move_map(-2, mario, brick, brick_length);
+        if (GetKeyState('A') < 0) horizon_move_map(2, mario, brick, brick_length, moving, moving_length);
+        if (GetKeyState('D') < 0) horizon_move_map(-2, mario, brick, brick_length, moving, moving_length);
 
-        if (mario.y > MAP_HEIGTH) player_dead(mario, max_lvl, level, score, brick, brick_length);
+        if (mario.y > MAP_HEIGTH) player_dead(mario, max_lvl, level, score, brick, brick_length, moving, moving_length);
 
-        vert_move_object(&mario, mario, level, max_lvl, score, brick, brick_length);
-        mario_collision(mario, max_lvl, level, score, brick, brick_length);
+        vert_move_object(&mario, mario, level, max_lvl, score, brick, brick_length, moving, moving_length);
+        mario_collision(mario, max_lvl, level, score, brick, brick_length, moving, moving_length);
 
         for (int i = 0; i < brick_length; i++) {
             put_object_on_map(brick[i], map);
         }
 
         for (int i = 0; i < moving_length; i++) {
-            vert_move_object(moving + i, mario, level, max_lvl, score, brick, brick_length);
-            horizon_move_object(moving + i, mario, level, max_lvl, score, brick, brick_length);
+            vert_move_object(moving + i, mario, level, max_lvl, score, brick, brick_length, moving, moving_length);
+            horizon_move_object(moving + i, mario, level, max_lvl, score, brick, brick_length, moving, moving_length);
             if (moving[i].y > MAP_HEIGTH) {
-                delete_moving(i);
+                delete_moving(i, moving, moving_length);
                 i--;
                 continue;
             }
