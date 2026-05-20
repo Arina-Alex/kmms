@@ -5,7 +5,7 @@
 namespace mal {
     class Brick: public Object {
         Brick(float x, float y, float width, float height, ObjectType type);
-        virtual ~Brick() = default;
+        ~Brick() = default;
 
         char get_symbol() const override;
     };
