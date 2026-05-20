@@ -4,9 +4,9 @@
 
 namespace mal {
     class Brick: public Object {
-        Brick(float width, float height, ObjectType type);
+        Brick(float x, float y, float width, float height, ObjectType type);
         virtual ~Brick() = default;
 
-        chat get_symbol() const override;
+        char get_symbol() const override;
     };
 }

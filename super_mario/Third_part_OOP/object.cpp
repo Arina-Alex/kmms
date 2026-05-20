@@ -1,8 +1,8 @@
 #include "object.hpp"
 
-namespace mal{
-    Object::Object(float wigth, float height, ObjectType type):
-        width(_width), height(_height), type(_type) 
+namespace mal {
+    Object::Object(float width, float height, ObjectType type):
+        _width(width), _height(height), _type(type) 
     {}
 
     float Object::x() const {
@@ -17,7 +17,7 @@ namespace mal{
     float Object::get_height() const {
         return _height;
     }
-    ObjectType get_type() const {
+    ObjectType Object::get_type() const{
         return _type;
     }
     void Object::setX(float x) {

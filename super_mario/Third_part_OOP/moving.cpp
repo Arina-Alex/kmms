@@ -1,8 +1,8 @@
 #include "moving.hpp"
 
 namespace mal{             
-    Moving::Moving(float wigth, float height, ObjectType type, float h_speed) 
-    : Object(width, height, type),
+    Moving::Moving(float width, float height, ObjectType type, float h_speed) : 
+      Object(width, height, type),
       vert_speed(0), 
       horiz_speed(h_speed),     
       is_fly(false)
@@ -14,7 +14,7 @@ namespace mal{
     float Moving::get_horiz_speed() const {
         return horiz_speed;
     }
-    bool Moving::is_fly() const {
+    bool Moving::is_flying() const {
         return is_fly;
     }
 
@@ -24,7 +24,7 @@ namespace mal{
     void Moving::set_horiz_speed(float speed) {
         horiz_speed = speed;
     }
-    void Moving::is_fly(bool fly) {
+    void Moving::is_flying(bool fly) {
         is_fly = fly;
     }
 
