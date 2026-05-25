@@ -4,9 +4,10 @@
 
 namespace mal {
     class Brick: public Object {
-        Brick(float x, float y, float width, float height, ObjectType type);
-        ~Brick() = default;
-
-        char get_symbol() const override;
+        public:
+            Brick(float x, float y, float width, float height, ObjectType type);
+            ~Brick() = default;
+        private:
+            char get_symbol() const override;
     };
 }
