@@ -169,21 +169,13 @@ namespace mal {
         draw_map();
     }
 
-    void set_cur(int x, int y) {
+    void Game::set_cur(int x, int y) {
         COORD coord;
-        coord.X = x;
-        coord.Y = y;
+        coord.X = static_cast<SHORT>(x);
+        coord.Y = static_cast<SHORT>(y);
         SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
     }
-
-    // void Game::set_cur(int x, int y) {
-    //     COORD coord;
-    //     coord.X = static_cast<SHORT>(x);
-    //     coord.Y = static_cast<SHORT>(y);
-    //     SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-    // }
-
-
+    
     void Game::update() {
         player.update();
         for (int i = 0; i < enemies.get_size(); ++i) {
@@ -265,7 +257,7 @@ namespace mal {
     }
     
     Game::Game(): current_level(1), max_level(3), is_running(true) {
-        player.reset_score();
+        player.reset_for_new_level();
         create_level(current_level);
     }
 
