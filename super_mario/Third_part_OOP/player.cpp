@@ -30,7 +30,8 @@ namespace mal {
         
         apply_gravity();
         move();
-        //is_jump = false;
+
+        is_jump = false;
     }
 
     void Player::jump() {
@@ -47,6 +48,7 @@ namespace mal {
         setY(10);
         vert_speed = 0;
         horiz_speed = 0;
+        score = 0;
 
         is_fly = false;
         is_left = false;
@@ -66,6 +68,10 @@ namespace mal {
 
     int Player::get_score() const {
         return score;
+    }
+
+    bool Player::get_jump() const { 
+        return is_jump;
     }
 
     bool Player::is_left_hold() const {
