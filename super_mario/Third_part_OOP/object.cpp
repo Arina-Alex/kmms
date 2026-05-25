@@ -32,11 +32,11 @@ namespace mal {
     void Object::addY(float dy) {
         _y += dy;
     }
-    void Object::setPos(float x, float y) {
+    void Object::set_pos(float x, float y) {
         _x = x;
         _y = y;
     }
-    void Object::setType(ObjectType type) {
+    void Object::set_type(ObjectType type) {
         _type = type;
     }
 

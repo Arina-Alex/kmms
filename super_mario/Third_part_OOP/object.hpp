@@ -29,8 +29,8 @@ namespace mal{
             void setY(float y);
             void addX(float dx);
             void addY(float dy);
-            void setPos(float x, float y);
-            void setType(ObjectType type);
+            void set_pos(float x, float y);
+            void set_type(ObjectType type);
 
             bool collision_with(const Object& other) const;
     };
