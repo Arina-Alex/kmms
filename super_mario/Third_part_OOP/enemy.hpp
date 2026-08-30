@@ -15,6 +15,7 @@ namespace mal {
             char get_symbol() const override;
             void update() override;
 
+            bool has_ground_ahead(const Vector<Brick>& bricks) const;
             bool has_ground_under(const Vector<Brick>& bricks) const;
     };
 }

@@ -16,8 +16,9 @@ enum ObjectType {
     TYPE_AIR = ' '
 };
 
-const float GRAVITY = 0.05f;
+const float COIN_SPEED = 0.3f;
+const float GRAVITY = 0.12f;
 const float JUMP_POWER = -1.5f;
-const float ENEMY_SPEED = 0.7f;
+const float ENEMY_SPEED = 0.4f;
 
 } 

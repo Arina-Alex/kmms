@@ -8,6 +8,8 @@ namespace mal {
             float vert_speed;
             float horiz_speed;  
             bool is_fly; 
+            float prev_x;
+            float prev_y;
 
         public:
             Moving(float width, float height, ObjectType type, float h_speed);
@@ -18,6 +20,8 @@ namespace mal {
             float get_vert_speed() const;
             float get_horiz_speed() const;
             bool is_flying() const;
+            float get_prev_x() const;
+            float get_prev_y() const;
 
             void set_vert_speed(float speed);
             void set_horiz_speed(float speed);

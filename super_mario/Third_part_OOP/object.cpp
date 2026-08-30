@@ -2,7 +2,7 @@
 
 namespace mal {
     Object::Object(float width, float height, ObjectType type):
-        _width(width), _height(height), _type(type) 
+        _x(0), _y(0), _width(width), _height(height), _type(type) 
     {}
 
     float Object::x() const {
@@ -44,8 +44,8 @@ namespace mal {
         bool x_over = (_x + _width) > other._x &&
             _x < (other._x + other._width);
 
-        bool y_over = (_y + _width) > other._y &&
-            _y < (other._y + other._width);
+        bool y_over = (_y + _height) > other._y &&
+            _y < (other._y + other._height);
         
         return x_over && y_over;
     }

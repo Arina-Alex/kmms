@@ -3,7 +3,7 @@
 
 namespace mal {
 
-    Coin::Coin(float x, float y): Moving(3, 2, TYPE_MONEY, 0) {
+    Coin::Coin(float x, float y): Moving(3, 2, TYPE_MONEY, COIN_SPEED) {
         setX(x);
         setY(y);
         vert_speed = -0.5f;  

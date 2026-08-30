@@ -16,14 +16,8 @@ namespace mal {
     }
 
     void Player::update() {
-        if (is_left) {
-            horiz_speed = -1.0f; 
-        } else if (is_right) {
-            horiz_speed = 1.0f;   
-        } else {
-            horiz_speed = 0;      
-        }
-        
+        horiz_speed = 0;      
+
         if (is_jump && !is_fly) {
             jump();
         }

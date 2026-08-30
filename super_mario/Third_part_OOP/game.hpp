@@ -5,6 +5,7 @@
 #include "brick.hpp"
 #include "coin.hpp"
 #include "enemy.hpp"
+#include "map.hpp"
 #include "player.hpp"
 #include "vector.hpp"
 
@@ -12,7 +13,7 @@
 namespace mal {
     class Game {
         private:
-            char map [MAP_HEIGHT][MAP_WIDTH+1];
+            Map map;
 
             Player player;
             Vector<Brick> bricks;
@@ -23,15 +24,10 @@ namespace mal {
             int max_level;
             bool is_running;
 
-            void clear_map();
-            void draw_map() const;
-            void horizon_move(float dx);
             void put_object_on_map(const Object& obj);
-            void put_score_on_map();
 
             void input();
             void render();
-            void set_cur(int x, int y);
             void update();
 
             void check_coin_collision();
@@ -42,6 +38,11 @@ namespace mal {
             void create_level(int level);
             void next_level();
             void player_dead();
+
+            void horizon_move(float dx);
+
+            void spawn_coin(const Brick& b);
+            bool has_ground_under(const Object& obj) const;
             
         public:
             Game();

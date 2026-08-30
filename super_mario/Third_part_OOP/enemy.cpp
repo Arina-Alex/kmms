@@ -14,6 +14,24 @@ namespace mal {
         return 'o';
     }
 
+    bool Enemy::has_ground_ahead(const Vector<Brick>& bricks) const {
+        float ahead_x = (get_horiz_speed() > 0)
+            ? x() + get_width() + 1
+            : x() - 1;
+        float check_y = y() + get_height() + 1; 
+
+        for (int i = 0; i < bricks.get_size(); ++i) {
+            const Brick& brick = bricks[i];
+            if (ahead_x >= brick.x() &&
+                ahead_x <= brick.x() + brick.get_width() &&
+                check_y >= brick.y() &&
+                check_y <= brick.y() + brick.get_height()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     bool Enemy::has_ground_under(const Vector<Brick>& bricks) const {
         float checkY = y() + get_height() + 1;
         
@@ -31,6 +49,7 @@ namespace mal {
     }
 
     void Enemy::update() {
+        apply_gravity(); 
         move();
     }
 }

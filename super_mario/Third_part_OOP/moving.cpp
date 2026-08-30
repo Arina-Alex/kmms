@@ -5,7 +5,8 @@ namespace mal{
       Object(width, height, type),
       vert_speed(0), 
       horiz_speed(h_speed),     
-      is_fly(false)
+      is_fly(false),
+      prev_x(0), prev_y(0)
     {}
 
     float Moving::get_vert_speed() const {
@@ -16,6 +17,12 @@ namespace mal{
     }
     bool Moving::is_flying() const {
         return is_fly;
+    }
+    float Moving::get_prev_x() const { 
+        return prev_x; 
+    }
+    float Moving::get_prev_y() const { 
+        return prev_y; 
     }
 
     void Moving::set_vert_speed(float speed) {
@@ -36,13 +43,12 @@ namespace mal{
     }
 
     void Moving::apply_gravity() {
-        if (!is_fly) {
-            is_fly = true;
-        }
         vert_speed += GRAVITY;
     }
 
     void Moving::move() {
+        prev_x = _x;
+        prev_y = _y;
         addX(horiz_speed);
         addY(vert_speed);
     }

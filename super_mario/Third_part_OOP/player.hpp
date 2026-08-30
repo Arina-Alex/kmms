@@ -21,6 +21,7 @@ namespace mal {
             void jump();
             void add_score(int points);      
             void reset_for_new_level();
+            // void reset_score();
 
             void set_left(bool hold);
             void set_right(bool hold);

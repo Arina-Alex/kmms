@@ -1,32 +1,37 @@
-#include <windows.h>
 #include <iostream>
+#include <windows.h>
 
 #include "game.hpp"
 
 namespace mal {
 
-    void Game::clear_map() {
-        for (int i = 0; i < MAP_WIDTH; ++i) {
-            map[0][i] = ' ';
+    Game::Game():
+        current_level(1),
+        max_level(3),
+        is_running(true) {
+            create_level(current_level);
         }
-        map[0][MAP_WIDTH] = '\0';
-        for (int j = 0; j < MAP_HEIGHT; ++j) {
-            sprintf_s(map[j], MAP_WIDTH + 1, "%s", map[0]);
+
+    void Game::put_object_on_map(const Object& obj) {
+        int ix = static_cast<int>(obj.x());
+        int iy = static_cast<int>(obj.y());
+        int iw = static_cast<int>(obj.get_width());
+        int ih = static_cast<int>(obj.get_height());
+    
+        for (int i = ix; i < ix + iw && i < MAP_WIDTH; ++i) {
+            for (int j = iy; j < iy + ih && j < MAP_HEIGHT; ++j) {
+                if (i >= 0 && j >= 0) {
+                    map.set_cell(i, j, obj.get_symbol());
+                }
+            }
         }
     }
-
-    void Game::draw_map() const {
-        for (int j = 0; j < MAP_HEIGHT; ++j) {
-            std::cout << map[j];
-        }
-    }
-
     void Game::horizon_move(float dx) {
-        player.addX(dx);
+        player.addX(-dx);
         
         for (int i = 0; i < bricks.get_size(); ++i) {
             if (player.collision_with(bricks[i])) {
-                player.addX(-dx);
+                player.addX(dx);
                 return;
             }
         }
@@ -43,29 +48,6 @@ namespace mal {
         }
     }
 
-    void Game::put_object_on_map(const Object& obj) {
-        int ix = static_cast<int>(obj.x());
-        int iy = static_cast<int>(obj.y());
-        int iw = static_cast<int>(obj.get_width());
-        int ih = static_cast<int>(obj.get_height());
-    
-        for (int i = ix; i < ix + iw && i < MAP_WIDTH; ++i) {
-            for (int j = iy; j < iy + ih && j < MAP_HEIGHT; ++j) {
-                if (i >= 0 && j >= 0) {
-                    map[j][i] = obj.get_symbol();
-                }
-            }
-        }
-    }
-
-    void Game::put_score_on_map() {
-        char c[30];
-        sprintf_s(c, "Score %d", player.get_score());
-        int len = strlen(c);
-        for (int i = 0; i < len; ++i) {
-            map[1][i + 5] = c[i];
-        }
-    }
 
     void Game::check_coin_collision() {
         for (int i = 0; i < coins.get_size(); ++i) {
@@ -80,18 +62,7 @@ namespace mal {
     void Game::check_collision() {
         check_brick_collision(player, true);
         check_enemy_collision();
-        check_coin_collision();
-        
-        // // Для врагов (как в horizon_move_object для врагов)
-        // for (int i = 0; i < enemies.get_size(); ++i) {
-        //     for (int j = 0; j < bricks.get_size(); ++j) {
-        //         if (enemies[i].collision_with(bricks[j])) {
-        //             enemies[i].addX(-enemies[i].get_horiz_speed());
-        //             enemies[i].get_horiz_speed(-enemies[i].get_horiz_speed());
-        //             break;
-        //         }
-        //     }
-        // }
+        check_coin_collision();  
     }
 
     void Game::check_enemy_collision() {
@@ -110,31 +81,96 @@ namespace mal {
         }
     }
 
+    void Game::spawn_coin(const Brick& b) {
+        Coin c(b.x() + b.get_width() / 2.0f, b.y() - 3);
+        c.set_horiz_speed((rand() % 2) ? COIN_SPEED : -COIN_SPEED);
+        coins.push_back(c);
+    }
+
     void Game::check_brick_collision(Moving& obj, bool is_player) {
         for (int i = 0; i < bricks.get_size(); ++i) {
-            if (obj.collision_with(bricks[i])) {
+            Brick& b = bricks[i];
+            if (!obj.collision_with(b)) continue;
 
-                if (obj.get_vert_speed() > 0) {
+            // перекрытие диапазонов ДО движения
+            bool x_before = (obj.get_prev_x() + obj.get_width())  > b.x() &&
+                            obj.get_prev_x() < (b.x() + b.get_width());
+            bool y_before = (obj.get_prev_y() + obj.get_height()) > b.y() &&
+                            obj.get_prev_y() < (b.y() + b.get_height());
+
+            bool vertical = x_before && !y_before;
+            bool horizontal = y_before && !x_before;
+
+            // угол: решаем по вертикали, если по ней вообще было движение
+            if (!vertical && !horizontal) {
+                vertical = (obj.y() != obj.get_prev_y());
+            }
+
+            if (vertical) {
+                if (obj.y() > obj.get_prev_y()) {          // падал -> встал сверху
+                    obj.setY(b.y() - obj.get_height());
+                    obj.set_vert_speed(0);
                     obj.is_flying(false);
-                }
+                } else {                                   // летел вверх -> ударился головой
+                    obj.setY(b.y() + b.get_height());
+                    obj.set_vert_speed(0);
 
-                if (is_player && bricks[i].get_type() == TYPE_BONUS && obj.get_vert_speed() < 0) {
-                    bricks[i].set_type(TYPE_EMPTY_BONUS);
-                    Coin new_coin(bricks[i].x(), bricks[i].y() - 3);
-                    new_coin.set_vert_speed(-0.5f);
-                    coins.push_back(new_coin);
+                    if (is_player && b.get_type() == TYPE_BONUS) {
+                        b.set_type(TYPE_EMPTY_BONUS);
+                        spawn_coin(b);
+                    }
                 }
-                
-                obj.addY(-obj.get_vert_speed());
-                obj.set_vert_speed(0);
-                
-                if (is_player && bricks[i].get_type() == TYPE_GOAL) {
-                    next_level();
-                }
-                break;
+            } else {                                       // упёрся в стену
+                if (obj.x() > obj.get_prev_x())
+                    obj.setX(b.x() - obj.get_width());
+                else
+                    obj.setX(b.x() + b.get_width());
+
+                if (!is_player) obj.set_horiz_speed(-obj.get_horiz_speed());
+            }
+
+            if (is_player && b.get_type() == TYPE_GOAL) {
+                next_level();
+                return;                 // ОБЯЗАТЕЛЬНО: bricks уже пересоздан!
             }
         }
     }
+    // void Game::check_brick_collision(Moving& obj, bool is_player) {
+    //     for (int i = 0; i < bricks.get_size(); ++i) {
+    //         if (obj.collision_with(bricks[i])) {
+    //             float obj_bottom_before = obj.y() + obj.get_height() - obj.get_vert_speed();
+                
+    //             if (obj.get_vert_speed() > 0 && obj_bottom_before <= bricks[i].y() + 5) {
+    //                 obj.setY(bricks[i].y() - obj.get_height());
+    //                 obj.set_vert_speed(0);
+    //                 obj.is_flying(false);
+    //             }
+    //             else if (obj.get_vert_speed() < 0 && is_player) {
+    //                 obj.setY(bricks[i].y() + bricks[i].get_height());
+    //                 obj.set_vert_speed(0);
+                    
+    //                 if (bricks[i].get_type() == TYPE_BONUS) {
+    //                     bricks[i].set_type(TYPE_EMPTY_BONUS);
+    //                     Coin newCoin(bricks[i].x(), bricks[i].y() - 3);
+    //                     newCoin.set_vert_speed(-0.5f);
+    //                     coins.push_back(newCoin);
+    //                 }
+    //             }
+    //             else {
+    //                 if (obj.x() < bricks[i].x()) {
+    //                     obj.setX(bricks[i].x() - obj.get_width());
+    //                 } else {
+    //                     obj.setX(bricks[i].x() + bricks[i].get_width());
+    //                 }
+    //             }
+
+    //             if (is_player && bricks[i].get_type() == TYPE_GOAL) {
+    //                 next_level();
+    //             }
+    //             break;
+    //         }
+    //     }
+    // }
 
     void Game::input() {
         player.set_left(GetKeyState('A') < 0);
@@ -150,7 +186,7 @@ namespace mal {
     }
 
     void Game::render() {
-        clear_map();
+        map.clear();
 
         for (int i = 0; i < bricks.get_size(); ++i) {
             put_object_on_map(bricks[i]);
@@ -165,32 +201,63 @@ namespace mal {
         }
         
         put_object_on_map(player);
-        set_cur(0, 0);
-        draw_map();
+        map.put_score(player.get_score());
+        map.set_cursor(0,0);
+        map.draw();
     }
 
-    void Game::set_cur(int x, int y) {
-        COORD coord;
-        coord.X = static_cast<SHORT>(x);
-        coord.Y = static_cast<SHORT>(y);
-        SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
-    }
-    
+
+
     void Game::update() {
         player.update();
+        check_brick_collision(player, true);
+
         for (int i = 0; i < enemies.get_size(); ++i) {
             enemies[i].update();
+            check_brick_collision(enemies[i], false);
+
+            if (!enemies[i].is_flying() && 
+                enemies[i].has_ground_under(bricks) && 
+                !enemies[i].has_ground_ahead(bricks)) {
+                enemies[i].set_horiz_speed(-enemies[i].get_horiz_speed());
+            }
+
+            if (enemies[i].y() > MAP_HEIGHT) {
+                enemies.remove(i);
+                i--;
+            }
+    
         }
-        check_collision();
         for (int i = 0; i < coins.get_size(); ++i) {
             coins[i].update();
+            check_brick_collision(coins[i], false);
+
+            if (!coins[i].is_flying() && !has_ground_under(coins[i])) {
+                coins[i].set_horiz_speed(-coins[i].get_horiz_speed());
+            }
+
+            if (coins[i].y() > MAP_HEIGHT) { 
+                coins.remove(i); --i; 
+            }
+        
+
+            // if (coins[i].y() > MAP_HEIGHT || coins[i].y() + coins[i].get_height() < 0) {
+            //     coins.remove(i);
+            //     i--;
+            // }
+        }
+
+        check_enemy_collision();
+        check_coin_collision();
+        // check_collision();
+        if (player.y() + player.get_height() > MAP_HEIGHT) {
+            player_dead();
+            return;
         }
     }
 
     void Game::create_level(int level) {
         system("color 3D");
-    
-        clear_map(); 
         
         bricks.clear();
         enemies.clear();
@@ -203,6 +270,15 @@ namespace mal {
             bricks.push_back(Brick(20, 20, 40, 5, TYPE_PLATFORM));
             bricks.push_back(Brick(30, 10, 5, 3, TYPE_BONUS));
             bricks.push_back(Brick(50, 10, 5, 3, TYPE_BONUS));
+            bricks.push_back(Brick(60, 15, 40, 10, TYPE_PLATFORM));
+            bricks.push_back(Brick(60, 5, 10, 3, TYPE_EMPTY_BONUS));
+            bricks.push_back(Brick(70, 5, 5, 3, TYPE_BONUS));
+            bricks.push_back(Brick(75, 5, 5, 3, TYPE_EMPTY_BONUS));
+            bricks.push_back(Brick(80, 5, 5, 3, TYPE_BONUS));
+            bricks.push_back(Brick(85, 5, 10, 3, TYPE_EMPTY_BONUS));
+            bricks.push_back(Brick(100, 20, 20, 5, TYPE_PLATFORM));
+            bricks.push_back(Brick(120, 15, 10, 10, TYPE_PLATFORM));
+            bricks.push_back(Brick(150, 20, 40, 5, TYPE_PLATFORM));
             bricks.push_back(Brick(210, 15, 10, 10, TYPE_GOAL));
             
             enemies.push_back(Enemy(25, 10));
@@ -255,25 +331,48 @@ namespace mal {
         Sleep(500);
         create_level(current_level);
     }
-    
-    Game::Game(): current_level(1), max_level(3), is_running(true) {
-        player.reset_for_new_level();
-        create_level(current_level);
+
+    bool Game::has_ground_under(const Object& obj) const {
+        float foot = obj.y() + obj.get_height() + 0.5f;
+        for (int i = 0; i < bricks.get_size(); ++i) {
+            const Brick& b = bricks[i];
+            if (obj.x() + obj.get_width() > b.x() &&
+                obj.x() < b.x() + b.get_width() &&
+                foot >= b.y() && foot <= b.y() + b.get_height()) {
+                return true;
+            }
+        }
+        return false;
     }
 
+    // bool Game::has_ground_at(float x, float y) const {
+    //     for (int i = 0; i < bricks.get_size(); ++i) {
+    //         const Brick& b = bricks[i];
+    //         if (x >= b.x() && x < b.x() + b.get_width() &&
+    //             y >= b.y() && y < b.y() + b.get_height())
+    //             return true;
+    //     }
+    //     return false;
+    // }
+
     void Game::run() {
+        // const DWORD FRAME_MS = 33;
         while (is_running) {
+            // DWORD frame_start = GetTickCount();
             input();
             
             if (player.is_left_hold()) {
-                horizon_move(2);
+                horizon_move(1.1f);
             }
             if (player.is_right_hold()) {
-                horizon_move(-2);
+                horizon_move(-1.1f);
             }
             
             update();
             render();
+
+            // DWORD elapsed = GetTickCount() - frame_start;
+            // if (elapsed < FRAME_MS) Sleep(FRAME_MS - elapsed);
             
             Sleep(10);
         }
